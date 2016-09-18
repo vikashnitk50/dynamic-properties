@@ -12,39 +12,40 @@ import org.slf4j.LoggerFactory;
 import com.properties.reader.common.constants.Constants;
 import com.properties.reader.common.exception.PropertiesReaderRuntimeException;
 
-
 public class DynamicPropertiesReader {
 
-	private static final Logger LOG = LoggerFactory.getLogger(DynamicPropertiesReader.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(DynamicPropertiesReader.class);
 
 	private Properties props;
-	
+
 	private String propertiesFileName;
-	
+
 	private String dirPath;
-	
+
 	private static final DynamicPropertiesReader INSTANCE = new DynamicPropertiesReader();
 
 	/**
 	 * private constructor
 	 */
 	private DynamicPropertiesReader() {
-		this.propertiesFileName = Constants.DIRECTORY +Constants.PATH+Constants.PROPERTIES_FILE_NAME;
+		this.propertiesFileName = Constants.DIRECTORY + Constants.PATH
+				+ Constants.PROPERTIES_FILE_NAME;
 		setDir();
 		load();
 	}
 
-	
 	public static DynamicPropertiesReader getInstance() {
-		 return INSTANCE;
+		return INSTANCE;
 	}
 
-	private void setDir(){
-		URL url = this.getClass().getClassLoader().getResource(propertiesFileName);
+	private void setDir() {
+		URL url = this.getClass().getClassLoader()
+				.getResource(propertiesFileName);
 		File path = new File(url.getPath());
-		this.dirPath=path.getParent();
+		this.dirPath = path.getParent();
 	}
-	
+
 	public void load() {
 		InputStream in = null;
 		try {
@@ -53,12 +54,12 @@ public class DynamicPropertiesReader {
 			if (in != null) {
 				Properties properties = new Properties();
 				properties.load(in);
-				this.props=properties;
-				printLogMessage("Loaded DYNAMIC Properties: {}", props.entrySet()
-						.toString());
+				this.props = properties;
+				printLogMessage("Loaded DYNAMIC Properties: {}", props
+						.entrySet().toString());
 			} else {
-				throw new PropertiesReaderRuntimeException("Couldn't find properties file: "
-						+ propertiesFileName);
+				throw new PropertiesReaderRuntimeException(
+						"Couldn't find properties file: " + propertiesFileName);
 			}
 		} catch (IOException e) {
 			throw new PropertiesReaderRuntimeException(
@@ -69,13 +70,31 @@ public class DynamicPropertiesReader {
 		}
 	}
 
-
 	public String getStringPropertyValue(DynamicPropertyNames name) {
 		return getStringPropertyValue(name, true);
 	}
 
+	public Integer getIntegerPropertyValue(DynamicPropertyNames name) {
+		return getIntegerPropertyValue(name, true);
+	}
 
-	public String getStringPropertyValue(DynamicPropertyNames name, boolean mustExist) {
+	public Integer getIntegerPropertyValue(DynamicPropertyNames name,
+			boolean mustExist) {
+		String value = getStringPropertyValue(name, mustExist);
+		try {
+			if (value != null) {
+				int intVal = Integer.parseInt(value);
+				return intVal;
+			}
+		} catch (NumberFormatException ex) {
+			throw new PropertiesReaderRuntimeException(
+					"Unable to parse string into integer :" + value);
+		}
+		return null;
+	}
+
+	public String getStringPropertyValue(DynamicPropertyNames name,
+			boolean mustExist) {
 		if (props != null) {
 			String val = props.getProperty(name.key());
 			if (mustExist && val == null)
@@ -88,11 +107,9 @@ public class DynamicPropertiesReader {
 		}
 	}
 
-
 	public String getDirPath() {
 		return dirPath;
 	}
-
 
 	private void printLogMessage(String logMessage, Object logParame) {
 		if (LOG.isDebugEnabled()) {
